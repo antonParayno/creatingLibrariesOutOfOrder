@@ -1,0 +1,155 @@
+// 	The function saves libraries on one variable in the global namespace.
+// 	The function should accept one or three arguments which are the libraryName, dependencyArray, callback.
+// 	It should accept libraries and return them when called.
+// 	It should accept libraries with dependencies and return the library along with the dependency when called.
+// 	It should accept libraries in any order.
+// 	It should call the callback function only once for all the libraries.
+
+(function () {
+  var libraryStorage = {};
+
+  function librarySystem(libraryName, dependencyArray, callback){
+    if(dependencyArray){
+      if(dependencyArray.length > 0) {
+	    var libraryArray = [];
+	    var numberOfElements = 0;
+	    // this block is to build the libraryArray that will be passed to callback with the use of apply method.
+	    for (var i = 0; i < dependencyArray.length; i++){
+	      var element = dependencyArray[i];
+		  var libName = libraryStorage[element];
+		  numberOfElements++;
+		  if (libName) {
+		    libraryArray.push(libName);
+		  }
+	    }
+	    // this code block checks if the libraryNames are given if not the arguments will be save on a object.
+	    if (libraryArray.length === numberOfElements) {
+	      libraryStorage[libraryName] = callback.apply(this, libraryArray);
+	    } else {
+	      libraryStorage[libraryName] = {
+		    libraryName: libraryName,
+		    dependencyArray: dependencyArray,
+		    callback: callback,
+		    incompleteLibraryArray: true // this will make sure that callback wont run for the libraries with incomplete dependencies.
+		  }
+	    }
+	  } else {
+	    libraryStorage[libraryName] = callback();
+	  }
+	} else {
+	  var libObject = libraryStorage[libraryName];
+
+	  if(!libObject){
+	    throw new TypeError('Library Name is undefined');
+	  };
+	  // for the condition it will pass for libraries without dependencies. 
+	  if (!libObject.incompleteLibraryArray) {
+	    return libraryStorage[libraryName];
+	  } else {
+	  // used recursion to run the callback function and overwrite the data on libraryStorage[libraryName]
+	    librarySystem(libObject.libraryName, libObject.dependencyArray, libObject.callback);
+		return libraryStorage[libraryName];
+	  }
+	}	
+  }
+	
+  window.librarySystem = librarySystem;
+})();
+
+tests ({
+  'It should have access to the function with one global variable.': function(){
+    var functionInterface = Boolean(librarySystem);
+	eq(functionInterface, true);
+  },
+  'It should run the callback function when given.': function(){
+	var count = 0;
+	librarySystem('test',[],function(){
+	  count++;
+	});
+	eq(count,1);
+  },
+  'It should return the library when empty dependencyArray is given.': function(){
+	librarySystem('firstName', [], function(){
+	  return 'anton';
+	});
+	var test = librarySystem('firstName')
+	eq(test, 'anton')
+  },
+  'It should return the library with the dependencies.': function(){
+    librarySystem('pangalan', [], function(){
+	  return 'anton';
+	});
+	librarySystem('introduction',['pangalan'], function(name){
+	  return 'My name is ' + name;
+	});
+	var check = librarySystem('introduction');
+	eq(check,'My name is anton');
+  },
+  'It should return or have access to all dependencies.': function(){
+	librarySystem('one', [], function(){
+	  return '1';
+	});
+	librarySystem('two', [], function(){
+	  return '2';
+	});
+	librarySystem('three', [], function(){
+	  return '3';
+	});
+	librarySystem('oneTwoThree',['one','two','three'],function(one,two,three){
+	  return one + two + three;
+	});
+	var count = librarySystem('oneTwoThree');
+	eq(count,'123')
+  },
+  'It should accept library in any order.': function(){
+    librarySystem('sevenEightNine',['seven','eight','nine'],function(seven,eight,nine){
+	  return seven + eight + nine;
+	});
+	librarySystem('eight', [], function(){
+	  return '8';
+	});
+	librarySystem('seven', [], function(){
+	  return '7';
+	});
+	librarySystem('nine', [], function(){
+	  return '9';
+	});
+	var count = librarySystem('sevenEightNine');
+	eq(count,'789')
+  },
+  'It should not run the callback for libraries with incomplete dependencies.': function(){
+	var count = 0;
+	librarySystem('workBlurb', ['name', 'company'], function(name, company) {
+	  count++
+  	  return name.name + ' works at ' + company.company;
+	});
+	librarySystem('company', [], function() {
+  	  return {company:'Watch and Code'};
+	});
+	librarySystem('workBlurb');
+	eq(count,0);
+  },
+  'It should only run the callback function for each library once.': function(){
+    var count = 0;
+	librarySystem('once',['coding'],function(coding){
+	  count++
+	  return coding;
+	});
+	librarySystem('coding',[],function(){
+	  return 'coding is fun';
+	});
+	librarySystem('once');
+	librarySystem('once');
+	librarySystem('once');
+	eq(count,1);
+  },
+  'It should throw an error when given library is undefined.': function(){
+    var isTypeError = false;
+	try {
+	  librarySystem('Testing')
+	} catch(e) {
+	  isTypeError = (e instanceof TypeError);
+	}
+	eq(isTypeError, true);
+  }
+});
