@@ -8,13 +8,13 @@
 (function () {
   var libraryStorage = {};
 
-  function librarySystem(libraryName, dependencyArray, callback){
-    if(dependencyArray){
-      if(dependencyArray.length > 0) {
+  function librarySystem (libraryName, dependencyArray, callback) {
+    if (dependencyArray) {
+      if (dependencyArray.length > 0) {
 	    var libraryArray = [];
 	    var numberOfElements = 0;
 	    // this block is to build the libraryArray that will be passed to callback with the use of apply method.
-	    for (var i = 0; i < dependencyArray.length; i++){
+	    for (var i = 0; i < dependencyArray.length; i++) {
 	      var element = dependencyArray[i];
 		  var libName = libraryStorage[element];
 		  numberOfElements++;
@@ -39,7 +39,7 @@
 	} else {
 	  var libObject = libraryStorage[libraryName];
 
-	  if(!libObject){
+	  if (!libObject) {
 	    throw new TypeError('Library Name is undefined');
 	  };
 	  // for the condition it will pass for libraries without dependencies. 
@@ -57,61 +57,61 @@
 })();
 
 tests ({
-  'It should have access to the function with one global variable.': function(){
+  'It should have access to the function with one global variable.': function () {
     var functionInterface = Boolean(librarySystem);
 	eq(functionInterface, true);
   },
-  'It should run the callback function when given.': function(){
+  'It should run the callback function when given.': function () {
 	var count = 0;
-	librarySystem('test',[],function(){
+	librarySystem('test',[],function () {
 	  count++;
 	});
 	eq(count,1);
   },
-  'It should return the library when empty dependencyArray is given.': function(){
-	librarySystem('firstName', [], function(){
+  'It should return the library when empty dependencyArray is given.': function () { 
+	librarySystem('firstName', [], function () {
 	  return 'anton';
 	});
 	var test = librarySystem('firstName')
 	eq(test, 'anton')
   },
-  'It should return the library with the dependencies.': function(){
-    librarySystem('pangalan', [], function(){
+  'It should return the library with the dependencies.': function () {
+    librarySystem('pangalan', [], function () {
 	  return 'anton';
 	});
-	librarySystem('introduction',['pangalan'], function(name){
+	librarySystem('introduction',['pangalan'], function (name) {
 	  return 'My name is ' + name;
 	});
 	var check = librarySystem('introduction');
 	eq(check,'My name is anton');
   },
-  'It should return or have access to all dependencies.': function(){
-	librarySystem('one', [], function(){
+  'It should return or have access to all dependencies.': function () {
+	librarySystem('one', [], function () {
 	  return '1';
 	});
-	librarySystem('two', [], function(){
+	librarySystem('two', [], function () {
 	  return '2';
 	});
-	librarySystem('three', [], function(){
+	librarySystem('three', [], function () {
 	  return '3';
 	});
-	librarySystem('oneTwoThree',['one','two','three'],function(one,two,three){
+	librarySystem('oneTwoThree',['one','two','three'],function (one,two,three) {
 	  return one + two + three;
 	});
 	var count = librarySystem('oneTwoThree');
 	eq(count,'123')
   },
   'It should accept library in any order.': function(){
-    librarySystem('sevenEightNine',['seven','eight','nine'],function(seven,eight,nine){
+    librarySystem('sevenEightNine',['seven','eight','nine'],function (seven,eight,nine) {
 	  return seven + eight + nine;
 	});
-	librarySystem('eight', [], function(){
+	librarySystem('eight', [], function () {
 	  return '8';
 	});
-	librarySystem('seven', [], function(){
+	librarySystem('seven', [], function () {
 	  return '7';
 	});
-	librarySystem('nine', [], function(){
+	librarySystem('nine', [], function () {
 	  return '9';
 	});
 	var count = librarySystem('sevenEightNine');
@@ -119,23 +119,23 @@ tests ({
   },
   'It should not run the callback for libraries with incomplete dependencies.': function(){
 	var count = 0;
-	librarySystem('workBlurb', ['name', 'company'], function(name, company) {
+	librarySystem('workBlurb', ['name', 'company'], function (name, company) {
 	  count++
   	  return name.name + ' works at ' + company.company;
 	});
-	librarySystem('company', [], function() {
+	librarySystem('company', [], function () {
   	  return {company:'Watch and Code'};
 	});
 	librarySystem('workBlurb');
 	eq(count,0);
   },
-  'It should only run the callback function for each library once.': function(){
+  'It should only run the callback function for each library once.': function () {
     var count = 0;
-	librarySystem('once',['coding'],function(coding){
+	librarySystem('once',['coding'],function (coding) {
 	  count++
 	  return coding;
 	});
-	librarySystem('coding',[],function(){
+	librarySystem('coding',[],function () {
 	  return 'coding is fun';
 	});
 	librarySystem('once');
@@ -143,7 +143,7 @@ tests ({
 	librarySystem('once');
 	eq(count,1);
   },
-  'It should throw an error when given library is undefined.': function(){
+  'It should throw an error when given library is undefined.': function () {
     var isTypeError = false;
 	try {
 	  librarySystem('Testing')
